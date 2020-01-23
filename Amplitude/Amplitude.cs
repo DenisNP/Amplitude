@@ -50,6 +50,17 @@ namespace AmplitudeService
         }
 
         /// <summary>
+        /// Get or create instance for specific user
+        /// </summary>
+        /// <param name="userId">User identifier</param>
+        /// <param name="userProperties">Properties that should be added to user</param>
+        /// <returns>Amplitude service instance</returns>
+        public static Amplitude InstanceFor(string userId, Dictionary<string, object> userProperties)
+        {
+            return InstanceFor(userId, false, userProperties);
+        }
+
+        /// <summary>
         /// Dispose instance for specific user
         /// </summary>
         /// <param name="userId">User identifier</param>
