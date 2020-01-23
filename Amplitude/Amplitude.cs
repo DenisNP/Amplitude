@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 
-namespace Amplitude
+namespace AmplitudeService
 {
     public class Amplitude
     {
