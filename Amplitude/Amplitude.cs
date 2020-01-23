@@ -31,11 +31,22 @@ namespace AmplitudeService
         /// Get or create instance for specific user
         /// </summary>
         /// <param name="userId">User identifier</param>
+        /// <param name="storeInstance">If enabled, InstanceFor will return same instance for same user</param>
         /// <param name="userProperties">Properties that should be added to user</param>
         /// <returns>Amplitude service instance</returns>
-        public static Amplitude InstanceFor(string userId, Dictionary<string, object> userProperties = null)
+        public static Amplitude InstanceFor(string userId, bool storeInstance = false, Dictionary<string, object> userProperties = null)
         {
-            return Instances.GetOrAdd(userId, new Amplitude(userId, userProperties));
+            if (storeInstance)
+            {
+                return Instances.GetOrAdd(userId, new Amplitude(userId, userProperties));
+            }
+
+            if (Instances.ContainsKey(userId))
+            {
+                throw new Exception("Dont mix stored instances with non-stored");
+            }
+            
+            return new Amplitude(userId, userProperties);
         }
 
         /// <summary>
@@ -77,9 +88,45 @@ namespace AmplitudeService
         /// </summary>
         /// <param name="eventName">String name of the event</param>
         /// <param name="properties">Additional event data, this will be added to persistent properties</param>
-        public void Track(string eventName, Dictionary<string, object> properties = null)
+        /// <returns>This instance for chaining</returns>
+        public Amplitude Track(string eventName, Dictionary<string, object> properties = null)
         {
             SendEvent(_userId, eventName, properties, _userProperties, _sessionStartTime);
+            return this;
+        }
+
+        /// <summary>
+        /// Track event with simplified method call
+        /// </summary>
+        /// <param name="eventName">Event name</param>
+        /// <param name="parameters">Array of key-value pairs sequentially</param>
+        /// <returns>This instance for chaining</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public Amplitude Track(string eventName, params object[] parameters)
+        {
+            if (parameters.Length % 2 != 0)
+            {
+                throw new ArgumentException(
+                    "Parameters array should represent key-value pairs and have even length"
+                );
+            }
+            var dict = new Dictionary<string, object>();
+            for (var i = 0; i < parameters.Length; i += 2)
+            {
+                var key = parameters[i];
+                var value = parameters[i + 1];
+                if (!(key is string))
+                {
+                    throw new ArgumentException(
+                        "Parameters array should represent key-value pairs, all keys must be strings"
+                    );
+
+                }
+                
+                dict.Add(key as string, value);
+            }
+
+            return Track(eventName, dict);
         }
 
         private static void SendEvent(
