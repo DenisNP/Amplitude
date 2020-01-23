@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 
 namespace Amplitude
@@ -9,12 +10,12 @@ namespace Amplitude
     public class Amplitude
     {
         private static string _apiKey;
-        private const string ApiAddress = "https://api.amplitude.com/httpapi";
+        private const string ApiAddress = "https://api.amplitude.com/2/httpapi";
         private static readonly HttpClient Client = new HttpClient();
         private static readonly ConcurrentDictionary<string, Amplitude> Instances = new ConcurrentDictionary<string, Amplitude>();
 
         private readonly string _userId;
-        private readonly Dictionary<string, object> _persistentProperties;
+        private readonly Dictionary<string, object> _userProperties;
         private long _sessionStartTime = -1;
         
         /// <summary>
@@ -30,11 +31,11 @@ namespace Amplitude
         /// Get or create instance for specific user
         /// </summary>
         /// <param name="userId">User identifier</param>
-        /// <param name="persistentProperties">Properties that should be added to each event for this user</param>
+        /// <param name="userProperties">Properties that should be added to user</param>
         /// <returns>Amplitude service instance</returns>
-        public static Amplitude InstanceFor(string userId, Dictionary<string, object> persistentProperties = null)
+        public static Amplitude InstanceFor(string userId, Dictionary<string, object> userProperties = null)
         {
-            return Instances.GetOrAdd(userId, new Amplitude(userId, persistentProperties));
+            return Instances.GetOrAdd(userId, new Amplitude(userId, userProperties));
         }
 
         /// <summary>
@@ -46,7 +47,7 @@ namespace Amplitude
             Instances.TryRemove(userId, out _);
         }
 
-        private Amplitude(string userId, Dictionary<string, object> persistentProperties = null)
+        private Amplitude(string userId, Dictionary<string, object> userProperties = null)
         {
             if (string.IsNullOrEmpty(_apiKey))
             {
@@ -54,7 +55,7 @@ namespace Amplitude
             }
 
             _userId = userId;
-            _persistentProperties = persistentProperties;
+            _userProperties = userProperties;
         }
 
         /// <summary>
@@ -78,34 +79,14 @@ namespace Amplitude
         /// <param name="properties">Additional event data, this will be added to persistent properties</param>
         public void Track(string eventName, Dictionary<string, object> properties = null)
         {
-            var allProps = new Dictionary<string, object>();
-
-            if (properties != null)
-            {
-                foreach (var prop in properties)
-                {
-                    allProps.Add(prop.Key, prop.Value);
-                }
-            }
-
-            if (_persistentProperties != null)
-            {
-                foreach (var prop in _persistentProperties)
-                {
-                    if (!allProps.ContainsKey(prop.Key))
-                    {
-                        allProps.Add(prop.Key, prop.Value);
-                    }
-                }
-            }
-
-            SendEvent(_userId, eventName, allProps, _sessionStartTime);
+            SendEvent(_userId, eventName, properties, _userProperties, _sessionStartTime);
         }
 
         private static void SendEvent(
             string userId,
             string eventName,
             Dictionary<string, object> properties,
+            Dictionary<string, object> userProperties,
             long sessionStartTime = -1
         )
         {
@@ -116,22 +97,35 @@ namespace Amplitude
                     {"user_id", userId},
                     {"insert_id", Guid.NewGuid()},
                     {"event_type", eventName},
-                    {"time", DateTimeOffset.Now.ToUnixTimeMilliseconds()},
-                    {"event_properties", properties}
+                    {"time", DateTimeOffset.Now.ToUnixTimeMilliseconds()}
                 };
+
+                if (properties != null)
+                {
+                    eventData.Add("event_properties", properties);
+                }
+
+                if (userProperties != null)
+                {
+                    eventData.Add("user_properties", userProperties);
+                }
 
                 if (sessionStartTime > 0)
                 {
                     eventData.Add("session_id", sessionStartTime);
                 }
                 
-                var parameters = new Dictionary<string, string>
+                var parameters = new Dictionary<string, object>
                 {
                     {"api_key", _apiKey},
-                    {"event", JsonSerializer.Serialize(eventData)}
+                    {"events", new List<Dictionary<string, object>>{eventData}}
                 };
-                
-                var content = new FormUrlEncodedContent(parameters);
+
+                var content = new StringContent(
+                    JsonSerializer.Serialize(parameters),
+                    Encoding.UTF8,
+                    "application/json"
+                );
                 Client.PostAsync(ApiAddress, content);
             }
             catch (Exception e)
