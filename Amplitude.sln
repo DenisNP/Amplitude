@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amplitude", "Amplitude\Amplitude.csproj", "{C522BC67-7FE9-43C9-8469-D45CC3B25965}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C522BC67-7FE9-43C9-8469-D45CC3B25965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C522BC67-7FE9-43C9-8469-D45CC3B25965}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C522BC67-7FE9-43C9-8469-D45CC3B25965}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C522BC67-7FE9-43C9-8469-D45CC3B25965}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

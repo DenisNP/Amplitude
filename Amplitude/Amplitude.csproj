@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>Amplitude event tracking library</Title>
+        <Authors>Denis Peshekhonov</Authors>
+        <Description>Tracking library for https://amplitude.com analytics service</Description>
+        <PackageVersion>0.9.0</PackageVersion>
+        <Copyright>Denis Peshekhonov, 2020</Copyright>
+        <PackageProjectUrl>https://github.com/DenisNP/Amplitude</PackageProjectUrl>
+        <PackageLicenseUrl>https://licenses.nuget.org/MIT</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/DenisNP/Amplitude</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <PackageTags>analytics amplitude</PackageTags>
+    </PropertyGroup>
+
+</Project>
